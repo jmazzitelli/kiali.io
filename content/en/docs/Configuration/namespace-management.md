@@ -7,7 +7,7 @@ description: "Configuring the namespaces accessible and visible to Kiali."
 
 The default Kiali [installation]({{< ref "/docs/installation/installation-guide" >}}) gives Kiali access to all namespaces available in the cluster and will allow all namespaces to be visible.
 
-It is possible to restrict Kiali so that it can only access a specific set of namespaces by providing [discovery selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#resources-that-support-set-based-requirements) that match those namespaces. Note that Kiali will not use [Istio's discovery selectors](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig); if Istio has been configured with its own discovery selectors, you will likely want to configure Kiali with the same list of discovery selectors.
+It is possible to restrict Kiali so that it can only access a specific set of namespaces by providing [discovery selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#resources-that-support-set-based-requirements) that match those namespaces. Note that Kiali will use [Istio's discovery selectors](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig) as defaults if no discovery selectors are defined in the Kiali configuration.
 
 {{% alert color="info" %}}
 This documentation makes a distinction between _accessible_ and _visible_ namespaces. The Kiali Server will be given permission to access either (a) all, or (b) a configured subset, of cluster namespaces. The Kiali Server will only be aware of, query for, and access resources within these accessible namespaces. The set of namespaces visible to an end user, via the Kiali UI, will be a subset of the accessible namespaces. In other words, the namespaces visible to a user may be all, or just some of the namespaces accessible to the Kiali Server.
@@ -75,7 +75,9 @@ When installing multiple Kiali instances into a single cluster, `deployment.disc
 
 ## Istio Discovery Selectors
 
-In Istio's [MeshConfig](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig), a list of discovery selectors can be configured. These Istio discovery selectors define the namespaces that Istio will consider "in the mesh" (see [this blog post](https://istio.io/v1.13/blog/2021/discovery-selectors/) for details). These Istio discovery selectors are utilized only by Istio; they will be ignored by Kiali.
+In Istio's [MeshConfig](https://istio.io/latest/docs/reference/config/istio.mesh.v1alpha1/#MeshConfig), a list of discovery selectors can be configured. These Istio discovery selectors define the namespaces that Istio will consider "in the mesh" (see [this blog post](https://istio.io/v1.13/blog/2021/discovery-selectors/) for details). These Istio discovery selectors are utilized by Kiali only if no discovery selectors are defined within Kiali's own `deployment.discovery_selectors` setting. In other words, the Istio discovery selectors are used as fallback defaults only if Kiali does not have its own discovery selectors defined.
+
+Note that if Istio discovery selectors are changed while Kiali is running, you are not guaranteed Kiali will be able to access the namespaces that match those new Istio discovery selectors. You must tell the Kiali Operator to reconcile the Kiali CR to pick up the changes to the Istio discovery selectors. See the next section for details on how you can tell the Kiali Operator to reconcile the Kiali CR.
 
 ## Operator Namespace Watching
 
